@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Channel Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=VT323&family=Courier+Prime&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --gold:    #f0c040;
+  --amber:   #c08020;
+  --dim:     #8a6a30;
+  --dark:    #5a3e10;
+  --darker:  #3a2a08;
+  --bg:      #0e0a02;
+  --card-bg: #160e04;
+  --green:   #80d080;
+  --red:     #c04020;
+}
+
+body { background: var(--bg); }
+
+.tv-root {
+  min-height: 100vh;
+  background: radial-gradient(ellipse at center, #2a1a06 0%, #0e0a02 70%, #000 100%);
+  color: #e8d48b;
+  font-family: 'Courier Prime', monospace;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Scanlines */
+.tv-root::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.13) 2px, rgba(0,0,0,0.13) 4px);
+  pointer-events: none; z-index: 1000;
+}
+/* Vignette */
+.tv-root::after {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.65) 100%);
+  pointer-events: none; z-index: 999;
+}
+
+/* ── Header ── */
+.tv-header {
+  text-align: center;
+  padding: 28px 16px 14px;
+  border-bottom: 2px solid var(--dark);
+  margin-bottom: 20px;
+}
+.tv-title {
+  font-family: 'VT323', monospace;
+  font-size: 3rem; color: var(--gold);
+  letter-spacing: 0.18em;
+  text-shadow: 0 0 18px #f0a000, 0 0 40px #c07000;
+}
+.tv-subtitle {
+  font-family: 'Special Elite', serif;
+  font-size: 0.75rem; color: #9a7a3a;
+  letter-spacing: 0.35em; margin-top: 5px;
+}
+.channel-dot {
+  display: inline-block;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--gold); box-shadow: 0 0 8px #f0a000;
+  margin-right: 10px; animation: blink 2.5s infinite;
+}
+@keyframes blink { 0%,88%,100%{opacity:1} 93%{opacity:.05} }
+
+/* ── Top bar ── */
+.top-bar {
+  display: flex; justify-content: flex-end;
+  padding: 0 20px 14px;
+  max-width: 820px; margin: 0 auto;
+}
+
+/* ── Buttons ── */
+.btn {
+  font-family: 'VT323', monospace;
+  font-size: 1.1rem; letter-spacing: 0.1em;
+  padding: 6px 18px;
+  border: 2px solid var(--dark);
+  background: transparent; color: #e8d48b;
+  cursor: pointer; transition: all 0.15s;
+  text-transform: uppercase;
+}
+.btn:hover { background: var(--dark); color: #ffe070; box-shadow: 0 0 12px var(--amber); }
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn-primary { border-color: var(--amber); color: var(--gold); }
+.btn-primary:hover { background: var(--amber); color: #fff8e0; box-shadow: 0 0 18px #f0a000; }
+.btn-seen { border-color: #4a8a4a; color: var(--green); font-size: 0.9rem; padding: 4px 12px; }
+.btn-seen:hover { background: #2a5a2a; box-shadow: 0 0 10px #40a040; }
+.btn-del { border-color: #6a2010; color: #c06040; font-size: 0.85rem; padding: 3px 8px; }
+.btn-del:hover { background: #3a1008; box-shadow: 0 0 8px #802010; }
+.btn-season { border-color: #4a6a8a; color: #80a8d0; font-size: 0.9rem; padding: 4px 12px; }
+.btn-season:hover { background: #1a3a5a; box-shadow: 0 0 10px #2060a0; }
+.btn-refresh { border-color: #3a5a3a; color: #60a060; font-size: 1rem; padding: 6px 14px; }
+.btn-refresh:hover { background: #1a3a1a; box-shadow: 0 0 10px #208020; }
+.btn-refresh:disabled { opacity: 0.4; cursor: default; }
+.waiting-label { font-family: 'VT323', monospace; font-size: 0.85rem; color: #6080a0; letter-spacing: 0.08em; }
+.card-ep-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.card-ep-date { font-family: 'VT323', monospace; font-size: 0.85rem; color: #6a8a4a; white-space: nowrap; }
+.card-network { font-family: 'Courier Prime', monospace; font-size: 0.72rem; color: var(--dim); font-style: italic; }
+.card-status-badge { font-family: 'VT323', monospace; font-size: 0.82rem; letter-spacing: 0.05em; }
+.card-network-logo { height: 16px; width: auto; margin-left: 8px; vertical-align: middle; opacity: 0.7; filter: sepia(40%) brightness(1.2); }
+.card-next-ep { font-family: 'VT323', monospace; font-size: 0.82rem; color: #5a7a9a; letter-spacing: 0.06em; }
+.btn-sm { font-size: 0.9rem; padding: 4px 12px; }
+
+/* ── Cards ── */
+.cards-grid {
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 0 20px 40px;
+  max-width: 820px; margin: 0 auto;
+}
+.card {
+  display: flex;
+  border: 2px solid var(--dark);
+  background: linear-gradient(135deg, #1e1204 0%, var(--card-bg) 100%);
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  animation: cardIn 0.3s ease;
+}
+@keyframes cardIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+.card:hover { border-color: #a07030; box-shadow: 0 0 20px rgba(180,120,20,.2); }
+.card.unaired { opacity: 0.5; border-color: var(--darker); }
+.card.finished { opacity: 0.35; border-color: var(--darker); }
+
+.card-poster { width: 86px; min-width: 86px; background: var(--bg); overflow: hidden; }
+.card-poster img { width:100%; height:100%; object-fit:cover; filter:sepia(45%) contrast(.88) brightness(.82); display:block; }
+.card-poster-placeholder { width:100%; height:100%; min-height:115px; display:flex; align-items:center; justify-content:center; background:#150e02; color:var(--dark); font-size:2rem; }
+
+.divider { width: 2px; background: linear-gradient(to bottom, transparent, var(--dark) 20%, var(--dark) 80%, transparent); }
+
+.card-body { flex:1; padding:11px 13px; display:flex; flex-direction:column; gap:5px; }
+.card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+.card-name { font-family:'Special Elite',serif; font-size:1rem; color:var(--gold); text-shadow:0 0 8px rgba(240,160,0,.35); line-height:1.2; }
+.card-ep-badge { font-family:'VT323',monospace; font-size:1.2rem; color:var(--green); white-space:nowrap; text-shadow:0 0 8px #40a040; }
+.card-ep-title { font-family:'Courier Prime',monospace; font-size:.76rem; color:#b89040; font-style:italic; }
+.card-synopsis { font-family:'Courier Prime',monospace; font-size:.74rem; color:var(--dim); line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.card-footer { display:flex; justify-content:space-between; align-items:center; margin-top:3px; flex-wrap:wrap; gap:4px; }
+.card-airdate { font-family:'VT323',monospace; font-size:.9rem; color:var(--dark); }
+.card-airdate.today { color:#f0a030; text-shadow:0 0 6px #c07010; }
+.unaired-label { font-family:'VT323',monospace; font-size:.78rem; color:#4a3a10; }
+.finished-label { font-family:'VT323',monospace; font-size:.78rem; color:#6a4010; letter-spacing:.05em; }
+
+.card-actions { display:flex; gap:6px; align-items:center; }
+
+/* ── Modal ── */
+.modal-overlay {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.88);
+  z-index:2000; display:flex; align-items:center; justify-content:center; padding:16px;
+}
+.modal {
+  background:#140e02; border:2px solid var(--amber); padding:24px;
+  width:100%; max-width:460px;
+  box-shadow:0 0 40px rgba(180,120,20,.3);
+  max-height:90vh; overflow-y:auto;
+}
+.modal-title { font-family:'VT323',monospace; font-size:1.7rem; color:var(--gold); letter-spacing:.1em; margin-bottom:16px; text-shadow:0 0 10px #c08000; }
+.modal input[type="text"] {
+  width:100%; background:var(--bg); border:1px solid var(--dark);
+  color:#e8d48b; font-family:'Courier Prime',monospace; font-size:.9rem;
+  padding:8px 12px; outline:none; margin-bottom:10px;
+}
+.modal input:focus { border-color:var(--amber); box-shadow:0 0 8px rgba(160,112,48,.3); }
+
+.search-results { max-height:280px; overflow-y:auto; border:1px solid var(--darker); margin-bottom:10px; }
+.search-result-item { display:flex; gap:10px; align-items:center; padding:8px 10px; cursor:pointer; border-bottom:1px solid #2a1e06; transition:background .1s; }
+.search-result-item:hover { background:#1e1404; }
+.search-result-item img { width:34px; height:51px; object-fit:cover; filter:sepia(40%); flex-shrink:0; }
+.sri-placeholder { width:34px; height:51px; background:var(--bg); display:flex; align-items:center; justify-content:center; color:var(--dark); font-size:1.2rem; flex-shrink:0; }
+.sri-name { font-family:'Special Elite',serif; font-size:.88rem; color:#e8c060; }
+.sri-year { font-family:'VT323',monospace; font-size:.82rem; color:var(--dark); }
+
+.modal-footer { display:flex; gap:10px; justify-content:flex-end; margin-top:10px; }
+
+/* ── Status / empty ── */
+.empty-state { text-align:center; padding:60px 20px; font-family:'Special Elite',serif; color:var(--dark); font-size:.95rem; line-height:2.2; }
+.status-msg { font-family:'VT323',monospace; font-size:.95rem; color:var(--dim); letter-spacing:.12em; padding:6px 0; min-height:26px; }
+.status-msg.error { color:var(--red); }
+.spinner { display:inline-block; animation:spin .8s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* ── Discover ── */
+.btn-discover { border-color: #6a4a8a; color: #c090e0; font-size: 1rem; padding: 6px 14px; }
+.btn-discover:hover { background: #2a1a4a; box-shadow: 0 0 10px #8040c0; }
+.discover-modal { max-width: 680px; width: 100%; max-height: 88vh; display: flex; flex-direction: column; }
+.discover-subtitle { font-family: 'Courier Prime', monospace; font-size: 0.75rem; color: var(--dark); letter-spacing: 0.2em; margin-bottom: 14px; }
+.discover-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.discover-date-header {
+  font-family: 'VT323', monospace; font-size: 1.1rem; color: var(--amber);
+  letter-spacing: 0.15em; padding: 10px 0 4px;
+  border-bottom: 1px solid var(--darker); margin-bottom: 4px;
+}
+.discover-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px;
+  border: 1px solid var(--darker);
+  background: #130d02;
+  transition: border-color 0.15s, background 0.15s;
+}
+.discover-item:hover { border-color: var(--dark); background: #1a1004; }
+.discover-item-info { flex: 1; min-width: 0; }
+.discover-show-name { font-family: 'Special Elite', serif; font-size: 0.9rem; color: var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.discover-ep { font-family: 'VT323', monospace; font-size: 0.95rem; color: var(--green); }
+.discover-ep-title { font-family: 'Courier Prime', monospace; font-size: 0.72rem; color: #b89040; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.discover-network { font-family: 'Courier Prime', monospace; font-size: 0.7rem; color: var(--dim); }
+.discover-add-btn { font-family: 'VT323', monospace; font-size: 0.9rem; padding: 3px 10px; border: 1px solid #4a6a4a; color: #80c080; background: transparent; cursor: pointer; white-space: nowrap; transition: all 0.15s; flex-shrink: 0; }
+.discover-add-btn:hover { background: #1a3a1a; box-shadow: 0 0 8px #40a040; }
+.discover-add-btn.added { border-color: var(--darker); color: var(--dark); cursor: default; }
+.discover-add-btn:disabled { opacity: 0.5; cursor: default; }
+.discover-info-btn { font-family: 'VT323', monospace; font-size: 0.9rem; padding: 3px 10px; border: 1px solid #4a6a8a; color: #80a8d0; background: transparent; cursor: pointer; white-space: nowrap; transition: all 0.15s; flex-shrink: 0; }
+.discover-info-btn:hover { background: #1a3a5a; box-shadow: 0 0 8px #2060a0; }
+.btn-sonarr { border-color: #8a4a1a; color: #e08040; font-size: 0.85rem; padding: 3px 10px; }
+.btn-sonarr:hover { background: #3a1a08; box-shadow: 0 0 8px #c05010; }
+.btn-sonarr:disabled { opacity: 0.4; cursor: default; }
+
+/* Info modal */
+.info-overlay { z-index: 3000; }
+.info-modal { max-width: 600px; width: 100%; max-height: 88vh; display: flex; flex-direction: column; }
+.info-content { overflow-y: auto; flex: 1; }
+.info-backdrop { width: 100%; height: 120px; object-fit: cover; object-position: center 20%; filter: sepia(50%) brightness(0.6); margin-bottom: 14px; }
+.info-poster-row { display: flex; gap: 14px; margin-bottom: 14px; }
+.info-poster { width: 80px; min-width: 80px; height: 120px; object-fit: cover; filter: sepia(40%); }
+.info-poster-placeholder { width: 80px; min-width: 80px; height: 120px; background: #0e0a02; display: flex; align-items: center; justify-content: center; color: var(--dark); font-size: 2rem; }
+.info-main { flex: 1; }
+.info-title { font-family: 'Special Elite', serif; font-size: 1.1rem; color: var(--gold); margin-bottom: 4px; }
+.info-tagline { font-family: 'Courier Prime', monospace; font-size: 0.75rem; color: var(--dim); font-style: italic; margin-bottom: 8px; }
+.info-meta { font-family: 'VT323', monospace; font-size: 0.9rem; color: #a08040; line-height: 1.6; }
+.info-section { margin-bottom: 12px; }
+.info-label { font-family: 'VT323', monospace; font-size: 0.85rem; color: var(--amber); letter-spacing: 0.1em; margin-bottom: 3px; }
+.info-text { font-family: 'Courier Prime', monospace; font-size: 0.78rem; color: #8a7040; line-height: 1.5; }
+.info-cast { display: flex; flex-wrap: wrap; gap: 6px; }
+.info-cast-item { font-family: 'Courier Prime', monospace; font-size: 0.72rem; color: #7a6030; border: 1px solid var(--darker); padding: 2px 7px; }
+.info-rating { font-family: 'VT323', monospace; font-size: 1.3rem; color: var(--gold); text-shadow: 0 0 8px rgba(240,160,0,.4); }
+
+/* ── Toast ── */
+.toast {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+  background:#1e1404; border:2px solid var(--amber);
+  font-family:'VT323',monospace; font-size:1rem; color:var(--gold);
+  padding:8px 20px; letter-spacing:.1em;
+  z-index:3000; animation:toastIn .3s ease;
+  box-shadow:0 0 20px rgba(180,120,20,.4);
+}
+@keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+</style>
+</head>
+<body>
+<div class="tv-root">
+  <header class="tv-header">
+    <div class="tv-title"><span class="channel-dot"></span>CHANNEL GUIDE</div>
+    <div class="tv-subtitle">YOUR PERSONAL BROADCAST SCHEDULE</div>
+  </header>
+
+  <div class="top-bar">
+    <button class="btn btn-refresh" id="btnRefresh" title="Actualizar datos de TMDB">⟳ REFRESH</button>
+    <button class="btn btn-discover" id="btnDiscover">◈ DESCUBRIR</button>
+    <button class="btn btn-primary" id="btnAdd">+ AGREGAR SERIE</button>
+  </div>
+
+  <div class="cards-grid" id="cardsGrid">
+    <div class="empty-state">∷ SIN SEÑAL ∷<br>Agregá una serie para empezar a emitir</div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" style="display:none">
+  <div class="modal">
+    <div class="modal-title">∷ NUEVA SINTONÍA</div>
+    <input type="text" id="searchInput" placeholder="Buscar serie..." autocomplete="off">
+    <div class="status-msg" id="searchStatus"></div>
+    <div class="search-results" id="searchResults" style="display:none"></div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" id="btnCancel">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- Show Info Modal -->
+<div class="modal-overlay info-overlay" id="infoModal" style="display:none">
+  <div class="modal info-modal">
+    <div id="infoContent" class="info-content">
+      <div class="status-msg"><span class="spinner">⟳</span> CARGANDO...</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" id="btnInfoClose">CERRAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- Discover Modal -->
+<div class="modal-overlay" id="discoverModal" style="display:none">
+  <div class="modal discover-modal">
+    <div class="modal-title">◈ PRÓXIMOS ESTRENOS</div>
+    <div class="discover-subtitle">Próximos 30 días · Trakt.tv</div>
+    <div class="status-msg" id="discoverStatus"></div>
+    <div id="discoverList" class="discover-list"></div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" id="btnDiscoverClose">CERRAR</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/api';
+let searchTimeout = null;
+let cachedShows = [];
+
+// ── Date utils ────────────────────────────────────────────────────────────────
+function parseDate(s) { return s ? new Date(s + 'T12:00:00') : null; }
+function isAired(dateStr) { return dateStr ? parseDate(dateStr) <= new Date() : false; }
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = parseDate(dateStr);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dDay  = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diff  = Math.round((dDay - today) / 86400000);
+  if (diff === 0)  return 'HOY';
+  if (diff === -1) return 'AYER';
+  if (diff < 0)   return `HACE ${Math.abs(diff)} DÍAS`;
+  if (diff === 1)  return 'MAÑANA';
+  return d.toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit', year:'2-digit'});
+}
+
+function sortShows(arr) {
+  const now = new Date();
+  const aired   = arr.filter(s => !s.finished && s.next_air_date && parseDate(s.next_air_date) <= now);
+  const unaired = arr.filter(s => !s.finished && (!s.next_air_date || parseDate(s.next_air_date) > now));
+  const finished = arr.filter(s => s.finished);
+  aired.sort((a,b) => parseDate(b.next_air_date) - parseDate(a.next_air_date));
+  return [...aired, ...unaired, ...finished];
+}
+
+function fmtEp(s, e) { return `S${String(s).padStart(2,'0')}E${String(e).padStart(2,'0')}`; }
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function statusBadge(status) {
+  const map = {
+    'Canceled':      ['CANCELADA', '#a03020'],
+    'Ended':         ['FINALIZADA', '#6a4a20'],
+    'In Production': ['RENOVADA',  '#206a40'],
+    'Planned':       ['RENOVADA',  '#206a40'],
+  };
+  const entry = map[status];
+  if (!entry) return '';
+  return ` <span class="card-status-badge" style="color:${entry[1]}">(${entry[0]})</span>`;
+}
+
+function isWaiting(s) {
+  if (s.finished) return false;
+  if (s.current_episode !== 1) return false;
+  // Tiene fecha y no emitió aún
+  if (s.next_air_date && !isAired(s.next_air_date)) return true;
+  // No tiene fecha pero es la última temporada conocida (TMDB no cargó eps todavía)
+  if (!s.next_air_date && s.current_season >= s.total_seasons) return true;
+  return false;
+}
+
+function renderCards(shows) {
+  const grid = document.getElementById('cardsGrid');
+  if (!shows.length) {
+    grid.innerHTML = '<div class="empty-state">∷ SIN SEÑAL ∷<br>Agregá una serie para empezar a emitir</div>';
+    return;
+  }
+  const sorted = sortShows(shows);
+  grid.innerHTML = sorted.map(s => {
+    const aired    = isAired(s.next_air_date);
+    const dateLabel = formatDate(s.next_air_date);
+    const isToday  = dateLabel === 'HOY';
+    const cls      = s.finished ? 'finished' : (!aired && s.next_air_date && !isWaiting(s) ? 'unaired' : '');
+
+    return `<div class="card ${cls}" data-id="${s.id}">
+      <div class="card-poster">
+        ${s.poster_path
+          ? `<img src="${s.poster_path}" alt="${s.name}" onerror="this.parentElement.innerHTML='<div class=card-poster-placeholder>📺</div>'">`
+          : '<div class="card-poster-placeholder">📺</div>'}
+      </div>
+      <div class="divider"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-name">${s.name}${s.network ? `<span class="card-network"> · ${s.network}</span>` : ''}${statusBadge(s.status)}</div>
+          <div class="card-ep-meta">
+            <span class="card-ep-badge">${fmtEp(s.current_season, s.current_episode)}</span>
+            ${s.next_air_date ? `<span class="card-ep-date">${formatDate(s.next_air_date)}</span>` : ''}
+          </div>
+        </div>
+        ${s.current_ep_title ? `<div class="card-ep-title">"${s.current_ep_title}"</div>` : ''}
+        ${s.next_ep_info ? `<div class="card-next-ep">PRÓX: ${s.next_ep_info}</div>` : ''}
+        <div class="card-synopsis">${s.synopsis || ''}</div>
+        <div class="card-footer">
+          <div>
+            ${!s.finished && !aired && s.next_air_date ? '<span class="unaired-label">AÚN NO EMITIDO</span>' : ''}
+            ${s.finished ? '<span class="finished-label">✦ SERIE FINALIZADA</span>' : ''}
+          </div>
+          <div class="card-actions">
+            ${sonarrEnabled && !s.finished ? `<button class="btn btn-sonarr" onclick="addToSonarr(${s.id}, this)" title="Agregar a Sonarr">+ SONARR</button>` : ''}
+            ${aired && !s.finished ? `<button class="btn btn-seen" onclick="markSeen(${s.id}, this)">✓ VISTO</button>` : ''}
+            ${!s.finished && !isWaiting(s) ? `<button class="btn btn-season" onclick="seasonDone(${s.id}, this)">» TEMP. VISTA</button>` : ''}
+            ${isWaiting(s) ? `<span class="waiting-label">⟳ ESPERANDO TEMPORADA ${s.current_season}</span>` : ''}
+            <button class="btn btn-del" onclick="deleteShow(${s.id}, this)">✕</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── API calls ─────────────────────────────────────────────────────────────────
+async function loadShows() {
+  try {
+    const r = await fetch(`${API}/shows`);
+    const shows = await r.json();
+    cachedShows = shows;
+    renderCards(shows);
+  } catch(e) {
+    showToast('ERROR AL CARGAR');
+  }
+}
+
+async function markSeen(showId, btn) {
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    const r = await fetch(`${API}/shows/${showId}/seen`, { method: 'POST' });
+    if (!r.ok) throw new Error();
+    await loadShows();
+    showToast('EPISODIO MARCADO COMO VISTO');
+  } catch {
+    showToast('ERROR AL ACTUALIZAR');
+    btn.disabled = false;
+    btn.textContent = '✓ VISTO';
+  }
+}
+
+async function seasonDone(showId, btn) {
+  if (!confirm('¿Marcar la temporada completa como vista?')) return;
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    const r = await fetch(`${API}/shows/${showId}/season-done`, { method: 'POST' });
+    if (!r.ok) throw new Error();
+    await loadShows();
+    showToast('TEMPORADA MARCADA COMO VISTA');
+  } catch {
+    showToast('ERROR AL ACTUALIZAR');
+    btn.disabled = false;
+    btn.textContent = '» TEMPORADA VISTA';
+  }
+}
+
+async function deleteShow(showId, btn) {
+  if (!confirm('¿Eliminar esta serie?')) return;
+  btn.disabled = true;
+  try {
+    await fetch(`${API}/shows/${showId}`, { method: 'DELETE' });
+    await loadShows();
+    showToast('SERIE ELIMINADA');
+  } catch {
+    showToast('ERROR AL ELIMINAR');
+    btn.disabled = false;
+  }
+}
+
+// ── Search & add ──────────────────────────────────────────────────────────────
+document.getElementById('searchInput').addEventListener('input', () => {
+  clearTimeout(searchTimeout);
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) {
+    document.getElementById('searchResults').style.display = 'none';
+    document.getElementById('searchStatus').textContent = '';
+    return;
+  }
+  document.getElementById('searchStatus').innerHTML = '<span class="spinner">⟳</span> BUSCANDO...';
+  searchTimeout = setTimeout(() => doSearch(q), 500);
+});
+
+async function doSearch(q) {
+  try {
+    const r = await fetch(`${API}/search?q=${encodeURIComponent(q)}`);
+    const results = await r.json();
+    const container = document.getElementById('searchResults');
+    document.getElementById('searchStatus').textContent = '';
+    if (!results.length) {
+      container.style.display = 'none';
+      document.getElementById('searchStatus').textContent = 'SIN RESULTADOS';
+      return;
+    }
+    container.style.display = 'block';
+    container.innerHTML = results.map(res => `
+      <div class="search-result-item" onclick="selectShow(${res.tmdb_id})">
+        ${res.poster_url
+          ? `<img src="${res.poster_url}" alt="${res.name}" onerror="this.outerHTML='<div class=sri-placeholder>📺</div>'">`
+          : '<div class="sri-placeholder">📺</div>'}
+        <div>
+          <div class="sri-name">${res.name}</div>
+          <div class="sri-year">${res.year || ''}</div>
+        </div>
+      </div>`).join('');
+  } catch {
+    document.getElementById('searchStatus').textContent = 'ERROR AL BUSCAR';
+    document.getElementById('searchStatus').className = 'status-msg error';
+  }
+}
+
+async function selectShow(tmdbId) {
+  const status = document.getElementById('searchStatus');
+  status.innerHTML = '<span class="spinner">⟳</span> AGREGANDO...';
+  status.className = 'status-msg';
+  document.getElementById('searchResults').style.display = 'none';
+
+  try {
+    const r = await fetch(`${API}/shows`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tmdb_id: tmdbId }),
+    });
+    if (r.status === 409) { showToast('LA SERIE YA ESTÁ EN TU LISTA'); closeModal(); return; }
+    if (!r.ok) throw new Error();
+    closeModal();
+    await loadShows();
+    showToast('SERIE AGREGADA');
+  } catch {
+    status.textContent = 'ERROR AL AGREGAR';
+    status.className = 'status-msg error';
+  }
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function openModal() {
+  const m = document.getElementById('modal');
+  m.style.display = 'flex';
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResults').style.display = 'none';
+  document.getElementById('searchStatus').textContent = '';
+  document.getElementById('searchStatus').className = 'status-msg';
+  setTimeout(() => document.getElementById('searchInput').focus(), 80);
+}
+function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+document.getElementById('btnAdd').addEventListener('click', openModal);
+document.getElementById('btnCancel').addEventListener('click', closeModal);
+document.getElementById('modal').addEventListener('click', e => { if (e.target === document.getElementById('modal')) closeModal(); });
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2800);
+}
+
+// ── Refresh ──────────────────────────────────────────────────────────────────
+document.getElementById('btnRefresh').addEventListener('click', async () => {
+  const btn = document.getElementById('btnRefresh');
+  btn.disabled = true;
+  btn.textContent = '⟳ ...';
+  try {
+    await fetch(`${API}/refresh`, { method: 'POST' });
+    // Esperar un momento y recargar
+    setTimeout(async () => {
+      await loadShows();
+      btn.disabled = false;
+      btn.textContent = '⟳ REFRESH';
+      showToast('DATOS ACTUALIZADOS');
+    }, 2000);
+  } catch {
+    showToast('ERROR EN REFRESH');
+    btn.disabled = false;
+    btn.textContent = '⟳ REFRESH';
+  }
+});
+
+// ── Sonarr ───────────────────────────────────────────────────────────────────
+let sonarrEnabled = false;
+
+async function checkSonarr() {
+  try {
+    const r = await fetch(`${API}/sonarr-status`);
+    const d = await r.json();
+    sonarrEnabled = d.configured === true;
+  } catch { sonarrEnabled = false; }
+}
+
+async function addToSonarr(showId, btn) {
+  const show = cachedShows.find(s => s.id === showId);
+  if (!show) return;
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    const r = await fetch(`${API}/sonarr-add`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tmdb_id: show.tmdb_id, show_name: show.name }),
+    });
+    if (r.status === 409) { showToast('YA ESTÁ EN SONARR'); btn.textContent = '✓ SONARR'; return; }
+    if (!r.ok) throw new Error((await r.json()).detail || 'Error');
+    showToast('AGREGADO A SONARR');
+    btn.textContent = '✓ SONARR';
+  } catch(e) {
+    showToast('ERROR SONARR: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = '+ SONARR';
+  }
+}
+
+// ── Show Info ─────────────────────────────────────────────────────────────────
+async function openInfo(tmdbId) {
+  const modal = document.getElementById('infoModal');
+  modal.style.display = 'flex';
+  document.getElementById('infoContent').innerHTML = '<div class="status-msg"><span class="spinner">⟳</span> CARGANDO...</div>';
+
+  try {
+    const r = await fetch(`${API}/show-info/${tmdbId}`);
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+
+    const runtime = d.episode_run_time && d.episode_run_time.length ? `${d.episode_run_time[0]} min` : '';
+    const year = d.first_air_date ? d.first_air_date.slice(0,4) : '';
+
+    document.getElementById('infoContent').innerHTML = `
+      ${d.backdrop_path ? `<img class="info-backdrop" src="${d.backdrop_path}" alt="">` : ''}
+      <div class="info-poster-row">
+        ${d.poster_path
+          ? `<img class="info-poster" src="${d.poster_path}" alt="${d.name}" onerror="this.outerHTML='<div class=info-poster-placeholder>📺</div>'">`
+          : '<div class="info-poster-placeholder">📺</div>'}
+        <div class="info-main">
+          <div class="info-title">${d.name} ${year ? `(${year})` : ''}</div>
+          ${d.tagline ? `<div class="info-tagline">"${d.tagline}"</div>` : ''}
+          <div class="info-meta">
+            ${d.networks.length ? `${d.networks.join(', ')} · ` : ''}
+            ${d.total_seasons} temp · ${d.total_episodes} eps
+            ${runtime ? ` · ${runtime}` : ''}
+            ${d.origin_country.length ? ` · ${d.origin_country.join(', ')}` : ''}
+          </div>
+          ${d.vote_average ? `<div class="info-rating">★ ${d.vote_average}</div>` : ''}
+        </div>
+      </div>
+      ${d.genres.length ? `
+      <div class="info-section">
+        <div class="info-label">GÉNEROS</div>
+        <div class="info-text">${d.genres.join(' · ')}</div>
+      </div>` : ''}
+      ${d.created_by.length ? `
+      <div class="info-section">
+        <div class="info-label">CREADA POR</div>
+        <div class="info-text">${d.created_by.join(', ')}</div>
+      </div>` : ''}
+      ${d.overview ? `
+      <div class="info-section">
+        <div class="info-label">SINOPSIS</div>
+        <div class="info-text">${d.overview}</div>
+      </div>` : ''}
+      ${d.cast.length ? `
+      <div class="info-section">
+        <div class="info-label">REPARTO</div>
+        <div class="info-cast">
+          ${d.cast.map(c => `<div class="info-cast-item">${c.name}${c.character ? ` <span style="color:var(--darker)">· ${c.character}</span>` : ''}</div>`).join('')}
+        </div>
+      </div>` : ''}
+    `;
+  } catch {
+    document.getElementById('infoContent').innerHTML = '<div class="status-msg error">ERROR AL CARGAR</div>';
+  }
+}
+
+function closeInfo() {
+  document.getElementById('infoModal').style.display = 'none';
+}
+
+document.getElementById('btnInfoClose').addEventListener('click', closeInfo);
+document.getElementById('infoModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('infoModal')) closeInfo();
+});
+
+// ── Discover ─────────────────────────────────────────────────────────────────
+let trackedTmdbIds = new Set();
+
+async function openDiscover() {
+  document.getElementById('discoverModal').style.display = 'flex';
+  const list = document.getElementById('discoverList');
+  const status = document.getElementById('discoverStatus');
+  list.innerHTML = '';
+  status.innerHTML = '<span class="spinner">⟳</span> SINTONIZANDO...';
+
+  // Get currently tracked tmdb_ids to mark already-added shows
+  try {
+    const r = await fetch(`${API}/shows`);
+    const shows = await r.json();
+    trackedTmdbIds = new Set(shows.map(s => s.tmdb_id));
+  } catch { trackedTmdbIds = new Set(); }
+
+  try {
+    const r = await fetch(`${API}/discover`);
+    if (!r.ok) throw new Error(await r.text());
+    const items = await r.json();
+    status.textContent = '';
+
+    if (!items.length) {
+      list.innerHTML = '<div class="empty-state" style="padding:30px">Sin estrenos encontrados</div>';
+      return;
+    }
+
+    // Group by date
+    const byDate = {};
+    for (const item of items) {
+      if (!byDate[item.date]) byDate[item.date] = [];
+      byDate[item.date].push(item);
+    }
+
+    let html = '';
+    for (const [d, entries] of Object.entries(byDate)) {
+      const label = formatDiscoverDate(d);
+      html += `<div class="discover-date-header">${label}</div>`;
+      for (const e of entries) {
+        const epStr = `S${String(e.season).padStart(2,'0')}E${String(e.episode).padStart(2,'0')}`;
+        const isAdded = e.tmdb_id && trackedTmdbIds.has(e.tmdb_id);
+        const btnLabel = isAdded ? '✓ EN LISTA' : '+ AGREGAR';
+        const btnClass = isAdded ? 'discover-add-btn added' : 'discover-add-btn';
+        const btnDisabled = isAdded ? 'disabled' : '';
+        const onclickAttr = (!isAdded && e.tmdb_id) ? `onclick="discoverAdd(${e.tmdb_id}, this)"` : '';
+        html += `
+        <div class="discover-item">
+          <div class="discover-item-info">
+            <div class="discover-show-name">${e.show_name}${e.year ? ` <span style="font-family:'Courier Prime',monospace;font-size:0.7rem;color:var(--dim)">(${e.year})</span>` : ''}</div>
+            <div>
+              <span class="discover-ep">${epStr}</span>
+              ${e.ep_title ? `<span class="discover-ep-title"> · "${e.ep_title}"</span>` : ''}
+            </div>
+            ${e.network ? `<div class="discover-network">${e.network}</div>` : ''}
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            ${e.tmdb_id ? `<button class="discover-info-btn" onclick="openInfo(${e.tmdb_id})">+ INFO</button>` : ''}
+            <button class="${btnClass}" ${btnDisabled} ${onclickAttr}>${btnLabel}</button>
+          </div>
+        </div>`;
+      }
+    }
+    list.innerHTML = html;
+  } catch(e) {
+    status.textContent = 'ERROR AL CARGAR · ' + e.message;
+    status.className = 'status-msg error';
+  }
+}
+
+function formatDiscoverDate(dateStr) {
+  const d = parseDate(dateStr);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dDay  = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diff  = Math.round((dDay - today) / 86400000);
+  const label = d.toLocaleDateString('es-AR', { weekday:'long', day:'2-digit', month:'long' }).toUpperCase();
+  if (diff === 0) return `HOY · ${label}`;
+  if (diff === 1) return `MAÑANA · ${label}`;
+  return label;
+}
+
+async function discoverAdd(tmdbId, btn) {
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    const r = await fetch(`${API}/shows`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tmdb_id: tmdbId }),
+    });
+    if (r.status === 409) { btn.textContent = '✓ EN LISTA'; btn.classList.add('added'); return; }
+    if (!r.ok) throw new Error();
+    btn.textContent = '✓ EN LISTA';
+    btn.classList.add('added');
+    trackedTmdbIds.add(tmdbId);
+    await loadShows();
+    showToast('SERIE AGREGADA');
+  } catch {
+    btn.disabled = false;
+    btn.textContent = '+ AGREGAR';
+    showToast('ERROR AL AGREGAR');
+  }
+}
+
+function closeDiscover() {
+  document.getElementById('discoverModal').style.display = 'none';
+}
+
+document.getElementById('btnDiscover').addEventListener('click', openDiscover);
+document.getElementById('btnDiscoverClose').addEventListener('click', closeDiscover);
+document.getElementById('discoverModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('discoverModal')) closeDiscover();
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+checkSonarr().then(() => loadShows());
+</script>
+</body>
+</html>
